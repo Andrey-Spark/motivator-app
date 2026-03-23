@@ -14,16 +14,26 @@ export default function App() {
   const SERVER = "http://127.0.0.1:8000";            // адрес FastAPI
 
   // --- Логин пользователя ---
-  const handleLogin = async () => {
-    if (!username) return alert("Введите имя!");
-    await fetch(`${SERVER}/login`, {
+const handleLogin = async () => {
+  if (!username) return alert("Введите имя!");
+
+  try {
+    const res = await fetch(`${SERVER}/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: username }),
     });
-    fetchXP();
-    fetchLeaders();
-  };
+
+    if (!res.ok) {
+      throw new Error(`Login failed: ${res.status}`);
+    }
+
+    await fetchLeaders();
+  } catch (err) {
+    console.error("Ошибка логина:", err);
+    alert("Backend не ответил. Проверь Render.");
+  }
+};
 
   // --- Получаем таблицу лидеров ---
   const fetchLeaders = async () => {
@@ -50,18 +60,24 @@ export default function App() {
   const completeChallenge = async () => {
   if (!username) return alert("Сначала залогиньтесь!");
 
-  await fetch(`${SERVER}/add_xp`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name: username }),
-  });
+  try {
+    const res = await fetch(`${SERVER}/add_xp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: username }),
+    });
 
-  await fetchLeaders();   // ждем обновление
-  fetchXP();              // сразу обновляем XP
+    if (!res.ok) {
+      throw new Error(`add_xp failed: ${res.status}`);
+    }
 
-  alert("Челлендж выполнен! +10 XP");
+    await fetchLeaders();
+    alert("Челлендж выполнен! +10 XP");
+  } catch (err) {
+    console.error("Ошибка add_xp:", err);
+    alert("XP не записался. Backend не отвечает.");
+  }
 };
-
   // --- Медали за достижения ---
 const updateMedals = (xp) => {
   const list = [];
